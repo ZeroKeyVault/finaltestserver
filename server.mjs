@@ -1,11 +1,11 @@
-// ✅ Fully rewritten production-ready WebSocket server with Kyber768 support for private vaults
+// ✅ Fully rewritten ES Module-compatible WebSocket server with Kyber768 support for private vaults
+// 📦 Save this as server.mjs and set "type": "module" in package.json
 
-const WebSocket = require('ws');
-const crypto = require('crypto');
-const { webcrypto } = require('crypto');
-const { subtle } = webcrypto;
-const { Kyber768 } = require('@openpgp/crystals-kyber-js');
+import WebSocket from 'ws';
+import crypto from 'crypto';
+import { Kyber768 } from '@openpgp/crystals-kyber-js';
 
+const { subtle } = crypto.webcrypto;
 const PORT = process.env.PORT || 8080;
 const clients = new Map();
 const vaults = new Map();
