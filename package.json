@@ -1,0 +1,26 @@
+{
+  "name": "kyber-chat-server",
+  "version": "1.0.0",
+  "description": "Post-quantum encrypted chat server using Kyber768 and AES-GCM",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "kyber",
+    "post-quantum",
+    "chat",
+    "aes-gcm",
+    "websocket",
+    "encrypted"
+  ],
+  "author": "Prakhar Solanki",
+  "license": "MIT",
+  "dependencies": {
+    "@openpgp/crystals-kyber-js": "^1.0.1",
+    "ws": "^8.13.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
