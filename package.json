@@ -1,26 +1,17 @@
 {
-  "name": "kyber-chat-server",
+  "name": "kyber-secure-vault-server",
   "version": "1.0.0",
-  "description": "Post-quantum encrypted chat server using Kyber768 and AES-GCM",
-  "main": "server.js",
+  "description": "WebSocket server with Kyber768 post-quantum encryption for private vaults",
+  "type": "module",
+  "main": "server.mjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.mjs"
   },
-  "keywords": [
-    "kyber",
-    "post-quantum",
-    "chat",
-    "aes-gcm",
-    "websocket",
-    "encrypted"
-  ],
-  "author": "Prakhar Solanki",
-  "license": "MIT",
   "dependencies": {
-    "@openpgp/crystals-kyber-js": "^1.0.1",
+    "@openpgp/crystals-kyber-js": "^1.0.0",
     "ws": "^8.13.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=16.0.0"
   }
 }
