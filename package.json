@@ -1,17 +1,16 @@
 {
   "name": "kyber-secure-vault-server",
-  "version": "1.0.0",
-  "description": "WebSocket server with Kyber768 post-quantum encryption for private vaults",
+  "version": "1.0.1",
   "type": "module",
   "main": "server.mjs",
   "scripts": {
     "start": "node server.mjs"
   },
   "dependencies": {
-    "@openpgp/crystals-kyber-js": "^1.0.0",
+    "liboqs-js": "^0.3.0",
     "ws": "^8.13.0"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=16"
   }
 }
