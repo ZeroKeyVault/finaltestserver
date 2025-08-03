@@ -1,12 +1,13 @@
-// ✅ Fully rewritten ES Module-compatible WebSocket server with Kyber768 support for private vaults
-// 📦 Save this as server.mjs and set "type": "module" in package.json
-
+// ✅ Fully compatible WebSocket + Kyber768 (liboqs-js) server
 import WebSocket from 'ws';
 import crypto from 'crypto';
-import { Kyber768 } from '@openpgp/crystals-kyber-js';
+import oqs from 'liboqs-js';
+
+await oqs.loadOqs(); // Required init for liboqs
 
 const { subtle } = crypto.webcrypto;
 const PORT = process.env.PORT || 8080;
+
 const clients = new Map();
 const vaults = new Map();
 const vaultHashes = new Map();
@@ -36,19 +37,20 @@ function cleanupExpiredVaults() {
                 expiredVaultId: vaultId,
                 expiredVaultName: vault.vaultName
             });
+
             vault.members.forEach(memberId => {
                 const client = clients.get(memberId);
                 if (client && client.readyState === WebSocket.OPEN) {
                     client.send(message);
                 }
             });
+
             vaults.delete(vaultId);
             vaultHashes.delete(vault.vaultHash);
             offlineMessages.delete(vaultId);
         }
     }
 }
-
 setInterval(cleanupExpiredVaults, 60 * 60 * 1000);
 
 const wss = new WebSocket.Server({ port: PORT });
@@ -89,10 +91,10 @@ wss.on('connection', ws => {
                 };
 
                 if (vaultType === 'private') {
-                    const kyber = new Kyber768();
-                    const [publicKey, privateKey] = await kyber.generateKeyPair();
+                    const kem = new oqs.KEM('Kyber768');
+                    const { publicKey, secretKey } = kem.generateKeypair();
                     vault.kyberPublicKey = Buffer.from(publicKey).toString('base64');
-                    vault.kyberPrivateKey = privateKey;
+                    vault.kyberPrivateKey = Buffer.from(secretKey).toString('base64');
                 }
 
                 vaults.set(vaultId, vault);
@@ -131,8 +133,12 @@ wss.on('connection', ws => {
 
                 if (vault.type === 'private') {
                     try {
-                        const kyber = new Kyber768();
-                        const sharedSecret = await kyber.decap(Buffer.from(ciphertext, 'base64'), vault.kyberPrivateKey);
+                        const kem = new oqs.KEM('Kyber768');
+                        const sharedSecret = kem.decapsulate(
+                            Buffer.from(ciphertext, 'base64'),
+                            Buffer.from(vault.kyberPrivateKey, 'base64')
+                        );
+
                         const aesKey = await subtle.importKey(
                             "raw",
                             sharedSecret,
@@ -140,8 +146,10 @@ wss.on('connection', ws => {
                             false,
                             ["encrypt", "decrypt"]
                         );
+
                         vault.aesKey = aesKey;
                     } catch (e) {
+                        console.error('Kyber decapsulation error:', e);
                         ws.send(JSON.stringify({ type: 'error', message: 'Failed to decapsulate Kyber ciphertext.' }));
                         return;
                     }
@@ -215,15 +223,13 @@ function broadcastToVault(vaultId, message, senderId) {
 function checkAndSendOfflineMessages(userId) {
     if (offlineMessages.has(userId)) {
         const messagesToSend = offlineMessages.get(userId);
-        if (messagesToSend.length > 0) {
-            const client = clients.get(userId);
-            if (client && client.readyState === WebSocket.OPEN) {
-                const messageData = messagesToSend.map(m => m.message);
-                client.send(JSON.stringify({ type: 'offline_messages', messages: messageData }));
-                offlineMessages.delete(userId);
-            }
+        const client = clients.get(userId);
+        if (client && client.readyState === WebSocket.OPEN) {
+            const messageData = messagesToSend.map(m => m.message);
+            client.send(JSON.stringify({ type: 'offline_messages', messages: messageData }));
+            offlineMessages.delete(userId);
         }
     }
 }
 
-console.log(`✅ WebSocket server with Kyber768 running on port ${PORT}`);
+console.log(`✅ Kyber-secure WebSocket server running on port ${PORT}`);
